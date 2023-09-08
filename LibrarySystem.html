@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Document</title>
+
+    <style>
+      body {
+        background: whitesmoke;
+
+        font-family: Roboto, "sans-serif";
+      }
+
+      .user {
+        display: flex;
+
+        background-color: rgb(255, 255, 255);
+
+        gap: 1rem;
+
+        padding: 0.8rem;
+
+        border-radius: 0.8rem;
+
+        box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+      }
+
+      .user-pic {
+        height: 13rem;
+
+        aspect-ratio: 1 / 1;
+
+        /* border-radius: 50%; */
+      }
+
+      .user-name {
+        margin-top: 0px;
+      }
+
+      .users-container {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 1rem;
+
+        max-width: 30rem;
+
+        margin: 0 auto;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      .add-user-form {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 0.5rem;
+
+        max-width: 30rem;
+
+        margin: 1rem auto;
+      }
+
+      .add-user-form * {
+        font-size: 1.2rem;
+      }
+
+      .pagination {
+        display: flex;
+
+        justify-content: center;
+      }
+      .add {
+        border-radius: 100px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Libray System</h1>
+
+    <div class="add-user-form">
+      <input class="bookTitle" type="text" placeholder="Title" />
+      <input class="bookImg" type="text" placeholder="Picture URL" />
+      <input class="bookYear" type="text" placeholder="Year" />
+      <input class="bookGenre" type="text" placeholder="Genre" />
+      <input class="bookDescription" type="text" placeholder="Description" />
+      <input class="bookAuthor" type="text" placeholder="Author Name" />
+      <button class="add" onclick="addUser()">Add Book</button>
+    </div>
+    <section class="users-container"></section>
+    <div class="pagination">
+      <button class="previous-btn" onclick="previousPage()">⬅️</button>
+
+      <span class="pagination-buttons"></span>
+
+      <button class="next-btn" onclick="nextPage()">➡️</button>
+    </div>
+
+    <script>
+      const usersList = document.querySelector(".users-container");
+
+      function addUser() {
+        console.log("Adding...");
+
+        const title = document.querySelector(".bookTitle").value;
+
+        const coverImageUrl = document.querySelector(".bookImg").value;
+
+        const publishedYear = document.querySelector(".bookYear").value;
+
+        const genre = document.querySelector(".bookGenre").value;
+
+        const description = document.querySelector(".bookDescription").value;
+
+        const author = document.querySelector(".bookAuthor").value;
+
+        const data = {
+          coverImageUrl,
+          publishedYear,
+          title,
+          author,
+          genre,
+          description,
+        };
+
+        fetch("https://64f6f4259d7754084952d8a9.mockapi.io/Library", {
+          method: "POST",
+
+          body: JSON.stringify(data),
+
+          headers: {
+            "Content-type": "application/json",
+          },
+        }).then(() => getUsers());
+
+        console.log(name, coverImageUrl);
+      }
+
+      const createUser = ({
+        title,
+        coverImageUrl,
+        description,
+        id,
+        author,
+        genre,
+        publishedYear,
+      }) => {
+        usersList.innerHTML += `<div class="user">
+
+        <img
+
+          class="user-pic"
+
+          src=${coverImageUrl}
+
+          alt=${title}
+
+        />
+
+       
+
+        <div class="user-detail">
+
+          <h2 class="user-name">${title}</h2>
+
+          <span><strong>Year:</strong> ${publishedYear}</span>
+          <span><strong> · Genre:</strong> ${genre}</span>
+
+          <p>${description}</p>
+
+          <h4>${author}</h4>
+
+          <button onclick="deleteUser(${id})">Delete</button>
+
+        </div>
+
+      </div>`;
+      };
+
+      function deleteUser(id) {
+        // Print the id of user in console
+
+        console.log("Deleting... User", id);
+
+        // Avoided Race condition
+
+        // Delete -> Refresh
+
+        fetch(`https://64f6f4259d7754084952d8a9.mockapi.io/Library/${id}`, {
+          method: "DELETE",
+        }).then(() => getUsers());
+      }
+
+      let pageNo = 1;
+
+      function getUsers() {
+        fetch(
+          `https://64f6f4259d7754084952d8a9.mockapi.io/Library?page=${pageNo}&limit=5`,
+          {
+            method: "GET",
+          }
+        )
+          .then((res) => res.json())
+
+          .then((users) => {
+            // Clear the old list
+
+            usersList.innerHTML = "";
+
+            // Adding the new list
+
+            users.forEach(createUser);
+          });
+      }
+
+      function nextPage() {
+        if (pageNo == singlePageLength) {
+          return;
+        }
+
+        pageNo++;
+
+        getUsers();
+      }
+
+      function previousPage() {
+        if (pageNo == 1) {
+          return;
+        }
+
+        pageNo--;
+
+        getUsers();
+      }
+
+      function btn(pageNum) {
+        pageNo = pageNum;
+
+        getUsers();
+      }
+
+      let singlePageLength;
+
+      async function getTotalUserCount() {
+        const totalData = await fetch(
+          "https://64f6f4259d7754084952d8a9.mockapi.io/Library"
+        );
+
+        const len = await totalData.json();
+
+        const totalLength = len.length;
+
+        singlePageLength = Math.ceil(totalLength / 5);
+
+        console.log(singlePageLength);
+
+        createPagination();
+      }
+
+      function createPagination() {
+        const buttons = document.querySelector(".pagination-buttons");
+
+        for (let i = 1; i <= singlePageLength; i++) {
+          buttons.innerHTML += `<button class="page1-btn" onclick="btn(${i})">${i}</button>`;
+        }
+      }
+
+      getTotalUserCount();
+
+      getUsers();
+    </script>
+  </body>
+</html>
