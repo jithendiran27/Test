@@ -82,6 +82,12 @@
       }
       .add {
         border-radius: 100px;
+        background-color: skyblue;
+      }
+
+      .searchBtn {
+        border-radius: 100px;
+        background-color: skyblue;
       }
     </style>
   </head>
@@ -97,6 +103,8 @@
       <input class="bookDescription" type="text" placeholder="Description" />
       <input class="bookAuthor" type="text" placeholder="Author Name" />
       <button class="add" onclick="addUser()">Add Book</button>
+      <input class="searchTitle" type="text" placeholder="Title Name" />
+      <button class="searchBtn" onclick="searchBookTitles()">Search</button>
     </div>
     <section class="users-container"></section>
     <div class="pagination">
@@ -142,9 +150,18 @@
           headers: {
             "Content-type": "application/json",
           },
-        }).then(() => getUsers());
+        })
+          .then(() => getUsers())
+          .then((clear) => deleteInputBox());
+      }
 
-        console.log(name, coverImageUrl);
+      function deleteInputBox() {
+        document.querySelector(".bookTitle").value = "";
+        document.querySelector(".bookImg").value = "";
+        document.querySelector(".bookYear").value = "";
+        document.querySelector(".bookGenre").value = "";
+        document.querySelector(".bookDescription").value = "";
+        document.querySelector(".bookAuthor").value = "";
       }
 
       const createUser = ({
@@ -274,6 +291,26 @@
         for (let i = 1; i <= singlePageLength; i++) {
           buttons.innerHTML += `<button class="page1-btn" onclick="btn(${i})">${i}</button>`;
         }
+      }
+
+      function searchBookTitles() {
+        console.log("Searching User...");
+        const search = document.querySelector(".searchTitle").value;
+
+        fetch(
+          `https://64f6f4259d7754084952d8a9.mockapi.io/Library?title=${search}`,
+
+          {
+            method: "GET",
+          }
+        )
+          .then((res) => res.json())
+
+          .then((data) => {
+            usersList.innerHTML = "";
+
+            data.forEach(createUser);
+          });
       }
 
       getTotalUserCount();
